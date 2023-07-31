@@ -1,5 +1,9 @@
+use delivery_order_service::run;
+use delivery_order_service::utils::errors::AppError;
 
 
-
-async fn main() {}
+#[tokio::main]
+async fn main() -> Result<(), AppError> {
+    Ok(run("dev").await?)
+}
 
