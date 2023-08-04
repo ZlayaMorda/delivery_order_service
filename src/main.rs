@@ -4,6 +4,6 @@ use delivery_order_service::utils::errors::AppError;
 
 #[tokio::main]
 async fn main() -> Result<(), AppError> {
-    Ok(run("dev").await?)
+    run("dev").await
 }
 

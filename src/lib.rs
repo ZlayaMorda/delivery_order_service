@@ -1,16 +1,30 @@
-use axum::{Router};
+use async_graphql::http::{GraphQLPlaygroundConfig, playground_source};
+use async_graphql::Schema;
+use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
+use axum::{Extension, Router};
+use axum::response::{Html, IntoResponse};
 use axum::routing::get;
+use sqlx::{Pool, Postgres};
 use tracing::{Subscriber};
 use tracing::subscriber::set_global_default;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{EnvFilter, Registry};
 use tracing_subscriber::layer::SubscriberExt;
 use crate::db::utils::get_pool;
+use crate::graphql::schema::{AppSchema, build_schema};
 use crate::utils::config::Config;
 use crate::utils::errors::AppError;
 
 pub mod utils;
 pub mod db;
+pub mod models;
+pub mod graphql;
+
+#[derive(Clone)]
+pub struct AppState {
+    pub db: Pool<Postgres>,
+    pub env: Config,
+}
 
 pub fn get_subscriber(
     config: &Config
@@ -35,6 +49,16 @@ pub fn get_subscriber(
     .with(formatting_layer)
 }
 
+async fn graphql_handler(schema: Extension<AppSchema>, req: GraphQLRequest) -> GraphQLResponse {
+    schema.execute(req.into_inner()).await.into()
+}
+
+async fn graphql_playground() -> impl IntoResponse {
+    Html(playground_source(GraphQLPlaygroundConfig::new(
+        "/api/graphql"
+    )))
+}
+
 pub async fn run(mode: &str) -> Result<(), AppError> {
     let config = Config::init(mode);
     let socket = format!("{}:{}", config.service_host, config.service_port);
@@ -44,11 +68,22 @@ pub async fn run(mode: &str) -> Result<(), AppError> {
 
     let pool = get_pool(&config.db_url).await?;
 
-    let app = Router::new()
-        .route("/", get(|| async { "Hello, World!" }))
-        .with_state(pool);
+    let app_state = AppState {
+        db: pool.clone(),
+        env: config.clone(),
+    };
 
-    let server = axum::Server::bind(&socket.parse().expect("dsf"))
+    let schema = build_schema().await;
+
+    let app = Router::new()
+        .route(
+            "/api/graphql",
+            get(graphql_playground).post(graphql_handler)
+        )
+        .layer(Extension(schema))
+        .with_state(app_state);
+
+    let server = axum::Server::bind(&socket.parse().expect("Error while parsing socket"))
         .serve(app.into_make_service())
         .await
         .expect("Error while start server");
