@@ -10,10 +10,12 @@ tokio = { version = "1.26.0", features = ["macros", "rt-multi-thread"] }
 serde_json = "1.0.93"
 serde = { version = "1.0.179", features = ["derive"] }
 dotenv = "0.15.0"
-sqlx = { version = "0.7.1", features = ["postgres", "runtime-tokio"] }
-
-async-graphql = "6.0.0"
+sqlx = { version = "0.7.1", features = ["postgres", "runtime-tokio", "uuid", "chrono"] }
+uuid = { version = "1.3.0", features = ["serde", "v4"] }
+chrono = { version = "0.4.23", features = ["serde"] }
+async-graphql = { version = "6.0.0", features = ["chrono", "uuid"] }
 async-graphql-axum = "6.0.0"
+jsonwebtoken = "8.2.0"
 
 
 tracing = { version = "0.1.37" }

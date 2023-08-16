@@ -1,5 +1,6 @@
+use serde::Deserialize;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct TokenClaims {
     pub sub: String,
     pub rol: String,
