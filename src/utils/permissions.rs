@@ -39,7 +39,6 @@ impl RoleGuard {
 impl Guard for RoleGuard {
     async fn check(&self, ctx: &Context<'_>) -> Result<(), Error> {
         let auth_user = ctx.data_opt::<AuthenticatedUser>();
-        tracing::info!("inside guard checker");
         match auth_user {
             Some(user) => {
                 if user.role == self.role || self.role == Role::Authorized{
