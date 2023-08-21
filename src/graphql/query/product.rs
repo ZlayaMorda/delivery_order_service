@@ -1,5 +1,6 @@
 use std::ops::Add;
 use async_graphql::{Context, Object};
+use uuid::Uuid;
 use crate::AppState;
 use crate::models::products::{Product, ProductType};
 use crate::utils::errors::AppError;
@@ -21,13 +22,13 @@ impl ProductQuery {
         Ok(row)
     }
 
-    async fn products_type<'ctx>(&self, ctx: &Context<'ctx>) -> Result<Vec<ProductType>, AppError> {
+    async fn products_type<'ctx>(&self, ctx: &Context<'ctx>) -> Result<ProductType, AppError> {
         let app_state = ctx.data::<AppState>()
             .expect("Error while get app state from the context");
 
         let row = sqlx::query_as::<_, ProductType>(
             "SELECT DISTINCT product_type FROM products")
-            .fetch_all(&app_state.db)
+            .fetch_one(&app_state.db)
             .await?;
         Ok(row)
     }
@@ -44,14 +45,14 @@ impl ProductQuery {
         Ok(row)
     }
 
-    async fn products_by_id<'ctx>(&self, ctx: &Context<'ctx>, id: String) -> Result<Vec<Product>, AppError> {
+    async fn products_by_id<'ctx>(&self, ctx: &Context<'ctx>, id: String) -> Result<Product, AppError> {
         let app_state = ctx.data::<AppState>()
             .expect("Error while get app state from the context");
 
         let row = sqlx::query_as::<_, Product>(
-            &get_fields(ctx).add(" FROM products WHERE restaurant = $1"))
-            .bind(id)
-            .fetch_all(&app_state.db)
+            "SELECT DISTINCT * FROM products WHERE product_uuid = $1")
+            .bind(Uuid::parse_str(&id)?)
+            .fetch_one(&app_state.db)
             .await?;
         Ok(row)
     }

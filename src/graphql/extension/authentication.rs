@@ -31,7 +31,6 @@ where
             .extract::<Extension<AppState>>()
             .await
             .map_err(|_| AppError::AppError("Cant get App state".to_string()))?;
-        println!("After state");
 
         let token = match parts.headers.get(AUTHORIZATION) {
             Some(token) => { Ok(token.to_str().expect("Cant convert token to string")) }

@@ -33,3 +33,17 @@ pub struct Product {
 pub struct ProductType {
     pub product_type: String,
 }
+
+#[derive(Debug, Clone, FromRow, SimpleObject, Serialize, Deserialize)]
+pub struct ChangeProduct {
+    #[graphql(guard = "RoleGuard::new(Role::Admin)")]
+    pub product_uuid: Uuid,
+    #[graphql(guard = "RoleGuard::new(Role::Admin)")]
+    pub product_type: String,
+    #[graphql(guard = "RoleGuard::new(Role::Admin)")]
+    pub product_name: String,
+    #[graphql(guard = "RoleGuard::new(Role::Admin)")]
+    pub restaurant: String,
+    #[graphql(guard = "RoleGuard::new(Role::Admin)")]
+    pub price: f64,
+}

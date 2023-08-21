@@ -4,8 +4,10 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum AppError {
-    #[error("SQLx")]
+    #[error("SQLx: {0}")]
     SQLxError(#[from] sqlx::Error),
+    #[error("Uuid: {0}")]
+    UuidError(#[from] uuid::Error),
     // #[error("GraphQL")]
     // GraphQLError(#[from] async_graphql::Error),
     #[error("Permission denied: {0}")]
@@ -22,6 +24,7 @@ impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let code = match self {
             AppError::SQLxError(_) => {StatusCode::INTERNAL_SERVER_ERROR}
+            AppError::UuidError(_) => {StatusCode::INTERNAL_SERVER_ERROR}
             AppError::PermissionError(_) => {StatusCode::FORBIDDEN}
             AppError::BadRequest(_) => {StatusCode::BAD_REQUEST}
             AppError::AppError(_) => {StatusCode::INTERNAL_SERVER_ERROR}
